@@ -2,9 +2,20 @@ import datetime
 import random
 from datetime import timedelta
 
-from models import LoanApplication
-from models import UserProfile
-from models import Vouching
+from .models import LoanApplication
+from .models import User
+from .models import Vouching
+
+
+def calculate_down_payment_and_interest(loan_application: LoanApplication) -> object:
+    down_payment = loan_application.total_loan_amount * 0.10
+    credit_score = loan_application.user.credit_score
+    interest_rate = 12.5 - int(credit_score / 100)
+    remaining_amount = loan_application.total_loan_amount * (
+        1 + (interest_rate * loan_application.months / 12.0)) - down_payment
+    loan_application.emi = remaining_amount / loan_application.months
+    loan_application.down_payment = down_payment
+    return loan_application
 
 
 def get_credit_score(pan_number):
@@ -21,7 +32,7 @@ def create_loan_application(loan_details):
 
 
 def get_user_loan_applications(user_id):
-    user = UserProfile.objects.get(id=user_id)
+    user = User.objects.get(id=user_id)
     loan_applications = user.loan_applications.all()
     loan_applications = [item.__dict__ for item in loan_applications]
     return loan_applications
@@ -44,7 +55,7 @@ def get_loan_application_status(loan_application_id):
 def add_vouchers_to_application(loan_id, user_names):
     loan_application = LoanApplication.objects.get(id=loan_id)
     for user_name in user_names:
-        voucher = UserProfile.objects.get(user_name=user_name)
+        voucher = User.objects.get(username=user_name)
         voucher.vouched_loan_applications.add(loan_application)
         vouch = Vouching()
         vouch.user = voucher
@@ -55,13 +66,14 @@ def add_vouchers_to_application(loan_id, user_names):
 
 
 def get_vouch_requests(user_id):
-    user = UserProfile.objects.get(id=user_id)
+    user = User.objects.get(id=user_id)
     vouches = Vouching.objects.filter(user=user).all()
     vouch_dicts = list()
     for item in vouches:
         vouch_dict = item.__dict__
         amount = item.loan_application.total_loan_amount
         months = item.loan_application.months
+        vouch_dict['request_user'] = item.loan_application.user.username
         vouch_dict['amount'] = amount
         vouch_dict['months'] = months
         vouch_dicts.append(vouch_dict)
@@ -79,6 +91,7 @@ def submit_loan_application(loan_application_id):
     for vouching in vouchings:
         vouching.vouch_value = vouching.vouch_value / float(total_value)
         vouching.save(update_fields=['vouch_value'])
+    loan_application.save()
 
 
 def get_loan_application_for_review():
@@ -93,7 +106,7 @@ def change_loan_application_status(loan_application_id, new_status):
 
 
 def create_account(account_details):
-    user = UserProfile()
+    user = User()
     pan_url = account_details['pan_url']
     name = account_details['name']
     pan_number = get_pan_number(pan_url)
@@ -103,7 +116,7 @@ def create_account(account_details):
 def update_credit_score(user_id):
     total_credit_delta = 0
 
-    user = UserProfile.objects.get(id=user_id)
+    user = User.objects.get(id=user_id)
 
     loan_applications = user.loan_applications.filter(loan_status='ACT').all()
     for loan_application in loan_applications:
@@ -175,3 +188,14 @@ def get_loan_repayment_tuple(loan_id):
     sequence['12345678'] = [(220, datetime.datetime(year=2018, month=5, day=2)),
                             (220, datetime.datetime(year=2018, month=6, day=1))]
     return sequence[loan_id]
+
+
+def get_expected_repayment_tuple(loan_application: LoanApplication) -> list():
+    start_date = loan_application.loan_start_date
+    delta = timedelta(days=30)
+    months = loan_application.months
+    emi = loan_application.emi
+    repayment_list = list()
+    for month_index in range(1, months + 1):
+        repayment_list.append((emi, start_date + delta * month_index))
+    return repayment_list

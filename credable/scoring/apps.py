@@ -5,4 +5,5 @@ from django.apps import AppConfig
 
 
 class ScoringConfig(AppConfig):
-    name = 'scoring'
+    name = "credable.scoring"
+    verbose_name = "Scoring"
