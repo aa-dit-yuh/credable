@@ -1,30 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json
-import os
-import time
-
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
-from django.http import HttpRequest
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView
-from rest_framework.decorators import api_view
-from .loan_application import create_loan_application
-from .loan_application import get_user_loan_applications
-from .loan_application import get_loan_application_status
+from .models import User
 from .loan_application import add_vouchers_to_application
-from .loan_application import submit_loan_application
-from .loan_application import get_vouch_requests
+from .loan_application import change_loan_application_status
+from .loan_application import create_loan_application
 from .loan_application import finish_vouching_process
 from .loan_application import get_loan_application_for_review
-from .loan_application import change_loan_application_status
-from django.shortcuts import render
+from .loan_application import get_loan_application_status
+from .loan_application import get_user_loan_applications
+from .loan_application import get_vouch_requests
+from .loan_application import submit_loan_application
+from .loan_application import update_credit_score
 
 
 # Create your views here.
@@ -87,3 +78,12 @@ def change_loan_application_status_view(request):
     new_status = request.data['new_status']
     change_loan_application_status(la_id, new_status)
     return HttpResponse("done")
+
+
+@csrf_exempt
+def get_credit_score(request):
+    user_id = request.data['user_id']
+    credit_score = update_credit_score(user_id)
+    user_dict = User.objects.get(id=user_id).__dict__
+    user_dict['credit_score'] = credit_score
+    return user_dict

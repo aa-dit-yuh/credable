@@ -215,3 +215,10 @@ def get_loan_status(loan_id):
     status = dict()
     status['12345678'] = 'ACT'
     return status[loan_id]
+
+
+def get_user_info(user_id):
+    credit_score = update_credit_score(user_id)
+    user_dict = User.objects.get(id=user_id).__dict__
+    user_dict['credit_score'] = credit_score
+    return user_dict
