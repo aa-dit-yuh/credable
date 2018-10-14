@@ -7,7 +7,7 @@ from .models import User
 from .models import Vouching
 
 
-def calculate_down_payment_and_interest(loan_application: LoanApplication) -> object:
+def calculate_down_payment_and_interest(loan_application: LoanApplication):
     down_payment = loan_application.total_loan_amount * 0.10
     credit_score = loan_application.user.credit_score
     interest_rate = 12.5 - int(credit_score / 100)
@@ -65,6 +65,12 @@ def add_vouchers_to_application(loan_id, user_names):
     return
 
 
+def submit_loan_application(loan_application_id):
+    loan_application = LoanApplication.objects.get(id=loan_application_id)
+    loan_application.loan_status = 'SUB'
+    loan_application.save()
+
+
 def get_vouch_requests(user_id):
     user = User.objects.get(id=user_id)
     vouches = Vouching.objects.filter(user=user).all()
@@ -80,9 +86,8 @@ def get_vouch_requests(user_id):
     return vouch_dicts
 
 
-def submit_loan_application(loan_application_id):
+def finish_vouching_process(loan_application_id):
     loan_application = LoanApplication.objects.get(id=loan_application_id)
-    loan_application.loan_status = 'SUB'
     vouchings = Vouching.objects.filter(status='ACC').all()
     total_value = 0
     for vouching in vouchings:
@@ -91,12 +96,16 @@ def submit_loan_application(loan_application_id):
     for vouching in vouchings:
         vouching.vouch_value = vouching.vouch_value / float(total_value)
         vouching.save(update_fields=['vouch_value'])
+    loan_application = calculate_down_payment_and_interest(loan_application)
     loan_application.save()
 
 
 def get_loan_application_for_review():
     loan_applications = LoanApplication.objects.filter(loan_status='SUB')
-    return loan_applications
+    loan_application_dicts = [la.__dict__ for la in loan_applications]
+    for item in loan_application_dicts:
+        item['credit_score'] = update_credit_score(item['user_id'])
+    return loan_application_dicts
 
 
 def change_loan_application_status(loan_application_id, new_status):
@@ -105,12 +114,13 @@ def change_loan_application_status(loan_application_id, new_status):
     loan_application.save(update_fields=['loan_status'])
 
 
-def create_account(account_details):
-    user = User()
-    pan_url = account_details['pan_url']
-    name = account_details['name']
-    pan_number = get_pan_number(pan_url)
-    credit_score = get_credit_score(pan_number)
+#
+# def create_account(account_details):
+#     user = User()
+#     pan_url = account_details['pan_url']
+#     name = account_details['name']
+#     pan_number = get_pan_number(pan_url)
+#     credit_score = get_credit_score(pan_number)
 
 
 def update_credit_score(user_id):
@@ -162,6 +172,7 @@ def update_credit_score(user_id):
             total_credit_delta += factor * credit_delta
 
     user.apparent_credit_score = user.credit_score + total_credit_delta
+    return user.apparent_credit_score
 
 
 def date_range(start_date, end_date):
@@ -169,10 +180,9 @@ def date_range(start_date, end_date):
         yield start_date + timedelta(n)
 
 
-def calculate_score_delta(payment_sequence, expected_payment, start_date):
+def calculate_score_delta(payment_sequence, expected_payment_sequence, start_date):
     current_date = datetime.datetime.today()
-    expected_payment_sequence = [(220, datetime.datetime(year=2018, month=5, day=2)),
-                                 (220, datetime.datetime(year=2018, month=6, day=5))]
+
     payment_sequence = [(220, datetime.datetime(year=2018, month=5, day=2)),
                         (220, datetime.datetime(year=2018, month=6, day=1))]
     diff_array = list()
@@ -181,13 +191,6 @@ def calculate_score_delta(payment_sequence, expected_payment, start_date):
         payment_by_date = sum([float(item[0]) for item in payment_sequence if item[1] < date])
         diff_array.append(payment_by_date - expected_payment_by_date)
     return sum(diff_array) / (30.0 * len(diff_array))
-
-
-def get_loan_repayment_tuple(loan_id):
-    sequence = dict()
-    sequence['12345678'] = [(220, datetime.datetime(year=2018, month=5, day=2)),
-                            (220, datetime.datetime(year=2018, month=6, day=1))]
-    return sequence[loan_id]
 
 
 def get_expected_repayment_tuple(loan_application: LoanApplication) -> list():
@@ -199,3 +202,10 @@ def get_expected_repayment_tuple(loan_application: LoanApplication) -> list():
     for month_index in range(1, months + 1):
         repayment_list.append((emi, start_date + delta * month_index))
     return repayment_list
+
+
+def get_loan_repayment_tuple(loan_id):
+    sequence = dict()
+    sequence['12345678'] = [(220, datetime.datetime(year=2018, month=5, day=2)),
+                            (220, datetime.datetime(year=2018, month=6, day=1))]
+    return sequence[loan_id]
