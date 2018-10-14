@@ -86,11 +86,13 @@
     <!-- Placed at the end of the document so the pages load faster -->
     {% block javascript %}
       <!-- Your stuff: Third-party javascript libraries go here -->
+      <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
       <script src="{% static 'js/bootstrap-material-design.min.js' %}"></script>
 
       <!-- place project specific Javascript in this file -->
       <script src="{% static 'js/project.js' %}"></script>
 
+      <script>$(document).ready(function() { $('body').bootstrapMaterialDesign(); });</script>
     {% endblock javascript %}
   </body>
 </html>
