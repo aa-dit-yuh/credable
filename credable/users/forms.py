@@ -9,6 +9,10 @@ class UserChangeForm(forms.UserChangeForm):
 
     class Meta(forms.UserChangeForm.Meta):
         model = User
+        fields = (
+            'name',
+            'pan_number',
+        )
 
 
 class UserCreationForm(forms.UserCreationForm):
@@ -19,6 +23,14 @@ class UserCreationForm(forms.UserCreationForm):
 
     class Meta(forms.UserCreationForm.Meta):
         model = User
+        fields = (
+            'name',
+            'username',
+            'email',
+            'pan_number',
+            'password1',
+            'password2',
+        )
 
     def clean_username(self):
         username = self.cleaned_data["username"]
@@ -29,3 +41,8 @@ class UserCreationForm(forms.UserCreationForm):
             return username
 
         raise ValidationError(self.error_messages["duplicate_username"])
+
+    def signup(self, request, user):
+        user.name = self.cleaned_data['name']
+        user.pan_number = self.cleaned_data['pan_number']
+        user.save()

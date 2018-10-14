@@ -236,6 +236,7 @@ ACCOUNT_ADAPTER = 'credable.users.adapters.AccountAdapter'
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = 'credable.users.adapters.SocialAccountAdapter'
 
+ACCOUNT_SIGNUP_FORM_CLASS = 'credable.users.forms.UserCreationForm'
 
 # Your stuff...
 # ------------------------------------------------------------------------------

@@ -8,7 +8,7 @@ class User(AbstractUser):
 
     # around the globe.
     name = CharField(_("Name of User"), blank=True, max_length=255)
-    credit_score = IntegerField()
+    credit_score = IntegerField(null=True)
     pan_number = CharField(max_length=15)
 
     def get_absolute_url(self):
