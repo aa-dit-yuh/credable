@@ -23,6 +23,10 @@ class User(AbstractUser):
         return self.loan_applications.filter(loan_status='REJ')
 
     @property
+    def submitted_applications(self):
+        return self.loan_applications.filter(loan_status='SUB')
+    
+    @property
     def approved_applications(self):
         return self.loan_applications.filter(loan_status='ACT')
 
