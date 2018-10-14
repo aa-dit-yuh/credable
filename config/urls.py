@@ -6,26 +6,21 @@ from django.views.generic import TemplateView
 from django.views import defaults as default_views
 
 urlpatterns = [
-                  path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
-                  path(
-                      "about/",
-                      TemplateView.as_view(template_name="pages/about.html"),
-                      name="about",
-                  ),
-                  # Django Admin, use {% url 'admin:index' %}
-                  path(settings.ADMIN_URL, admin.site.urls),
-                  # User management
-                  path(
-                      "users/",
-                      include("credable.users.urls", namespace="users"),
-                  ),
-                  path(
-                      "scoring/",
-                      include("credable.scoring.urls", namespace="scoring"),
-                  ),
-                  path("accounts/", include("allauth.urls")),
-                  # Your stuff: custom urls includes go here
-              ] + static(
+    path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    # Django Admin, use {% url 'admin:index' %}
+    path(settings.ADMIN_URL, admin.site.urls),
+    # User management
+    path(
+        "users/",
+        include("credable.users.urls", namespace="users"),
+    ),
+    path("accounts/", include("allauth.urls")),
+    # Your stuff: custom urls includes go here
+    path(
+        "scoring/",
+        include("credable.scoring.urls", namespace="scoring"),
+    ),
+] + static(
     settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
 )
 
