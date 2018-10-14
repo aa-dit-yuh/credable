@@ -13,3 +13,23 @@ class User(AbstractUser):
 
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})
+
+    @property
+    def current_applications(self):
+        return self.loan_applications.filter(loan_status='APP')
+
+    @property
+    def rejected_applications(self):
+        return self.loan_applications.filter(loan_status='REJ')
+
+    @property
+    def approved_applications(self):
+        return self.loan_applications.filter(loan_status='ACT')
+
+    @property
+    def finished_applications(self):
+        return self.loan_applications.filter(loan_status='FIN')
+
+    @property
+    def deliquent_applications(self):
+        return self.loan_applications.filter(loan_status='DEL')
