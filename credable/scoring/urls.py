@@ -9,6 +9,7 @@ from .views import (
     get_vouch_requests_view,
     finish_vouching_process_view,
     get_loan_application_for_review_view,
+    vouch_list_view,
 )
 
 app_name = "scoring"
@@ -22,4 +23,6 @@ urlpatterns = [
     path("finish_vouching_process/", view=finish_vouching_process_view, name="finish_vouching"),
     path("get_loan_application_for_review/", view=get_loan_application_for_review_view, name="get_loan"),
     path("get_loan_application_status/", view=get_loan_application_status_view, name="get_loan_status"),
+
+    path("", view=vouch_list_view, name="vouch_list"),
 ]

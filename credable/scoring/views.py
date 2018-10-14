@@ -5,7 +5,9 @@ from __future__ import unicode_literals
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import User
+from .models import User, LoanApplication
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .loan_application import add_vouchers_to_application
 from .loan_application import change_loan_application_status
 from .loan_application import create_loan_application
@@ -87,3 +89,17 @@ def get_credit_score(request):
     user_dict = User.objects.get(id=user_id).__dict__
     user_dict['credit_score'] = credit_score
     return user_dict
+
+
+class VouchListView(LoginRequiredMixin, ListView):
+
+    model = LoanApplication
+    slug_field = "username"
+    slug_url_kwarg = "username"
+
+    def get_queryset(self):
+        l = LoanApplication.objects.all()
+        print(l)
+        return l
+
+vouch_list_view = VouchListView.as_view()

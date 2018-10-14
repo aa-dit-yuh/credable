@@ -73,7 +73,7 @@ def submit_loan_application(loan_application_id):
 
 def get_vouch_requests(user_id):
     user = User.objects.get(id=user_id)
-    vouches = Vouching.objects.filter(user=user).all()
+    vouches = Vouching.objects.filter(user=user, status='REQ').all()
     vouch_dicts = list()
     for item in vouches:
         vouch_dict = item.__dict__
