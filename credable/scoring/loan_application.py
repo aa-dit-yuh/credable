@@ -114,15 +114,6 @@ def change_loan_application_status(loan_application_id, new_status):
     loan_application.save(update_fields=['loan_status'])
 
 
-#
-# def create_account(account_details):
-#     user = User()
-#     pan_url = account_details['pan_url']
-#     name = account_details['name']
-#     pan_number = get_pan_number(pan_url)
-#     credit_score = get_credit_score(pan_number)
-
-
 def update_credit_score(user_id):
     total_credit_delta = 0
 
@@ -139,7 +130,7 @@ def update_credit_score(user_id):
 
         if loan_status == 'DEL':
             user.credit_score += credit_delta
-            user.credit_score -= 10
+            user.credit_score -= (loan_application.total_loan_amount - get_total_amount_paid(unique_loan_id)) / 2000.0
             change_loan_application_status(loan_application.id, 'DEL')
         if loan_status == 'FIN':
             user.credit_score += credit_delta
@@ -204,8 +195,23 @@ def get_expected_repayment_tuple(loan_application: LoanApplication) -> list():
     return repayment_list
 
 
+def get_total_amount_paid(loan_application_id):
+    loan_application = LoanApplication.objects.get(id=loan_application_id)
+    unique_loan_id = loan_application.unique_loan_id
+    repayment_tuple = get_loan_repayment_tuple(loan_id=unique_loan_id)
+    current_date = datetime.datetime.today()
+    payment_by_date = sum([float(item[0]) for item in repayment_tuple if item[1] < current_date])
+    return payment_by_date
+
+
 def get_loan_repayment_tuple(loan_id):
     sequence = dict()
     sequence['12345678'] = [(220, datetime.datetime(year=2018, month=5, day=2)),
                             (220, datetime.datetime(year=2018, month=6, day=1))]
     return sequence[loan_id]
+
+
+def get_loan_status(loan_id):
+    status = dict()
+    status['12345678'] = 'ACT'
+    return status[loan_id]
